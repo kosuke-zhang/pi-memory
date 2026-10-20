@@ -11,7 +11,10 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 
-import {
+import { createMemoryRuntime, type ScratchpadItem } from "../index.js";
+
+const runtime = createMemoryRuntime({ env: process.env });
+const {
 	_clearEmbedInFlight,
 	_clearUpdateTimer,
 	_getEmbedInFlight,
@@ -46,7 +49,6 @@ import {
 	resolveMemoryDir,
 	resolveQmdJsPath,
 	runQmdSearch,
-	type ScratchpadItem,
 	scheduleQmdUpdate,
 	scratchpadAdd,
 	scratchpadClearDone,
@@ -55,7 +57,7 @@ import {
 	shortSessionId,
 	todayStr,
 	yesterdayStr,
-} from "../index.js";
+} = runtime;
 
 // ---------------------------------------------------------------------------
 // Test helpers
@@ -138,10 +140,10 @@ describe("runtime package scope", () => {
 		expect(source).not.toContain("@mariozechner/pi-ai");
 		expect(source).not.toContain("@mariozechner/pi-coding-agent");
 
-		expect(packageJson.devDependencies["@earendil-works/pi-ai"]).toBe("0.84.1");
-		expect(packageJson.devDependencies["@earendil-works/pi-coding-agent"]).toBe("0.84.1");
-		expect(packageJson.peerDependencies["@earendil-works/pi-ai"]).toBe(">=0.81.1");
-		expect(packageJson.peerDependencies["@earendil-works/pi-coding-agent"]).toBe(">=0.81.1");
+		expect(packageJson.devDependencies["@earendil-works/pi-ai"]).toBe("1.3.0");
+		expect(packageJson.devDependencies["@earendil-works/pi-coding-agent"]).toBe("1.3.0");
+		expect(packageJson.peerDependencies["@earendil-works/pi-ai"]).toBe("1.3.0");
+		expect(packageJson.peerDependencies["@earendil-works/pi-coding-agent"]).toBe("1.3.0");
 		expect(packageJson.peerDependencies["@mariozechner/pi-ai"]).toBeUndefined();
 		expect(packageJson.peerDependencies["@mariozechner/pi-coding-agent"]).toBeUndefined();
 		expect(packageJson.peerDependencies["@sinclair/typebox"]).toBeUndefined();
@@ -207,7 +209,7 @@ describe("GitHub Actions workflows", () => {
 });
 
 // We need to import the default export to register tools
-import registerExtension from "../index.js";
+const registerExtension = runtime.extension;
 
 // ==========================================================================
 // 1. Utility functions

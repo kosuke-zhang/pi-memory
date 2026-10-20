@@ -1,5 +1,75 @@
 # pi-memory
 
+This fork adds a **hosted SDK API for Pi 1.3.0**. Install this fork's built tarball;
+`npm:pi-memory` still refers to upstream. The CLI instructions below describe the
+standalone filesystem mode, not the hosted storage contract.
+
+## Hosted applications
+
+```ts
+import { createHostedMemoryExtension, MEMORY_TOOLS } from "pi-memory/hosted";
+
+const memory = createHostedMemoryExtension({
+  timeZone: "Asia/Shanghai",
+  store: studentBoundStore,
+});
+// Add { name: "pi-memory", factory: memory } to ResourceLoader extensionFactories.
+// Include MEMORY_TOOLS in the SDK tool allowlist and initial active tools.
+```
+
+Create the extension through its factory for every AgentSession. Bind the store
+to the authenticated student on the server; never let model arguments choose a
+student, path or namespace. Sessions of the same student share a store.
+
+`MemoryStore.read(operation?, signal?)` returns `{ revision, files, result? }`.
+`files` contains Markdown documents and recovery JSON. If an operation already
+committed, `result` is its original tool result. The host must durably reserve
+each operation on its first read, enforce authorization/budget, and reject reuse
+of an id with a different signature. Context reads have no operation but still
+require authorization.
+
+`commit(revision, files, operation, result, signal?)` must atomically validate
+the current execution authorization, check the operation reservation/signature,
+compare the revision, and save **all documents plus the result receipt**.
+A replay returns the original result. Conflicts return `{ committed: false }`.
+Successful commits return `{ committed: true, result }`. Keep receipts for the
+entire execution/replay window. Only explicit CAS conflicts retry (four attempts);
+unknown commit outcomes and transport failures propagate.
+
+Hosted behavior:
+
+- Reuses the Markdown mutation logic for long-term memory, daily logs,
+  scratchpad, atomic forget/recovery and repeatable restore.
+- Fresh bounded memory enters Pi's transient `context` hook as untrusted
+  user-channel data; it is not copied into persisted session messages.
+- Literal keyword search supports Chinese substrings and excludes recovery
+  documents. Hosted mode does **not** run QMD or provide semantic search.
+- No exit summary, background model calls, timers, shell processes or disk I/O.
+  Writes happen inside the main agent's ordinary tool loop.
+- No whole-document overwrite; correct obsolete facts with forget and append.
+- Limits: 512 documents, 128 KiB per document, 1 MiB total. Capacity failures
+  are explicit. Forget removes active memory, not recovery or conversation history.
+
+The process environment is not a tenant-switching API. Runtime state is
+instance-owned via `createMemoryRuntime()`, but standalone filesystem mode does
+not coordinate distributed writers. Hosted applications must use the store above.
+
+Build and verify without external model calls:
+
+```sh
+npm ci --ignore-scripts
+npm run build
+npm test                         # requires Bun
+npm run test:hosted
+npm pack
+```
+
+The package ships JavaScript/declarations for direct SDK imports. Build before
+loading a local checkout. Historical module-global helper exports and old SDK
+aliases are not retained.
+
+## Standalone CLI
+
 [![npm version](https://img.shields.io/npm/v/pi-memory?color=cb3837&logo=npm)](https://www.npmjs.com/package/pi-memory)
 [![npm downloads](https://img.shields.io/npm/dm/pi-memory?color=cb3837&logo=npm)](https://www.npmjs.com/package/pi-memory)
 [![license](https://img.shields.io/npm/l/pi-memory)](LICENSE)
@@ -242,7 +312,8 @@ All tests back up and restore existing memory files.
 
 ## Development
 
-This is a single-file extension (`index.ts`). No build step required — pi loads TypeScript directly.
+`index.ts` owns the Markdown runtime; `hosted.ts` adds the transactional SDK
+boundary. Run `npm run build` before installing this fork from a local checkout.
 
 ```bash
 # Test with pi directly

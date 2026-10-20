@@ -1,8 +1,8 @@
 {
 	"name": "pi-memory",
-	"version": "0.4.2",
+	"version": "0.5.0",
 	"description": "Pi coding agent extension for memory with qmd-powered semantic search across daily logs, long-term memory, and scratchpad",
-	"main": "index.ts",
+	"main": "dist/index.js",
 	"type": "module",
 	"keywords": [
 		"pi",
@@ -16,22 +16,23 @@
 	],
 	"pi": {
 		"extensions": [
-			"./index.ts"
+			"./dist/index.js"
 		]
 	},
 	"author": "jayzeng",
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/jayzeng/pi-memory.git"
+		"url": "git+https://github.com/kosuke-zhang/pi-memory.git"
 	},
 	"bugs": {
-		"url": "https://github.com/jayzeng/pi-memory/issues"
+		"url": "https://github.com/kosuke-zhang/pi-memory/issues"
 	},
-	"homepage": "https://github.com/jayzeng/pi-memory#readme",
+	"homepage": "https://github.com/kosuke-zhang/pi-memory#readme",
 	"files": [
+		"dist",
 		"index.ts",
-		"scripts",
+		"hosted.ts",
 		"README.md",
 		"CHANGELOG.md",
 		"LICENSE"
@@ -40,17 +41,18 @@
 		"access": "public"
 	},
 	"scripts": {
-		"postinstall": "node scripts/postinstall.cjs",
-		"build": "tsc -p tsconfig.json --noEmit",
+		"build": "tsc -p tsconfig.json",
 		"lint": "biome check .",
 		"test": "bun test test/unit.test.ts",
 		"test:e2e": "npx tsx test/e2e.ts",
-		"test:eval": "bun test/eval-recall.ts"
+		"test:eval": "bun test/eval-recall.ts",
+		"test:hosted": "node --import tsx --test test/hosted.test.ts",
+		"prepack": "npm run build"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.4.0",
-		"@earendil-works/pi-ai": "0.84.1",
-		"@earendil-works/pi-coding-agent": "0.84.1",
+		"@earendil-works/pi-ai": "1.3.0",
+		"@earendil-works/pi-coding-agent": "1.3.0",
 		"tsx": "^4.0.0",
 		"typescript": "^5.9.3"
 	},
@@ -58,11 +60,22 @@
 		"node": ">=22.19.0"
 	},
 	"peerDependencies": {
-		"@earendil-works/pi-ai": ">=0.81.1",
-		"@earendil-works/pi-coding-agent": ">=0.81.1"
+		"@earendil-works/pi-ai": "1.3.0",
+		"@earendil-works/pi-coding-agent": "1.3.0"
 	},
 	"overrides": {
 		"rimraf": "^6.1.3",
 		"glob": "^13.0.3"
+	},
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		},
+		"./hosted": {
+			"types": "./dist/hosted.d.ts",
+			"import": "./dist/hosted.js"
+		}
 	}
 }

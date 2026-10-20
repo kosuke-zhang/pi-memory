@@ -2,7 +2,9 @@
 
 ## Project Structure & Module Organization
 
-- `index.ts`: the entire pi extension (single-file, TypeScript loaded directly by `pi`)
+- `index.ts`: instance-owned Markdown/CLI runtime and default Pi extension
+- `hosted.ts`: SDK factory, transactional document adapter and MemoryStore contract
+- `test/hosted.test.ts`: multi-session/isolation/CAS tests; no external models
 - `test/e2e.ts`: end-to-end tests that invoke `pi` as a subprocess
 - `README.md`: user-facing install/usage docs
 - `package.json`: metadata + **peer** dependencies (provided by the pi runtime)
@@ -22,14 +24,15 @@ Runtime data lives outside the repo under `~/.pi/agent/memory/` (`MEMORY.md`, `S
 - `npm test`: run the fast unit suite (`bun test test/unit.test.ts`; no API key, no qmd)
 - `npm run test:e2e` (or `npx tsx test/e2e.ts`): run E2E tests (requires `pi` on PATH + a configured API key)
 - `npm run test:eval`: run the recall-effectiveness eval (requires `pi` + API key + qmd)
-- `npm run build`: typecheck with `tsc` (`--noEmit`)
+- `npm run build`: typecheck and emit JavaScript/declarations into `dist/`
+- `npm run test:hosted`: hosted isolation, CAS, replay, recovery and cancellation
 - `npm run lint`: lint with Biome
 - Optional (for `memory_search`, requires Bun): `command -v qmd >/dev/null 2>&1 || bun install -g https://github.com/tobi/qmd`
 - Optional search setup: `qmd collection add ~/.pi/agent/memory --name pi-memory && qmd embed`
 
 ## Coding Style & Naming Conventions
 
-- Keep `index.ts` self-contained; avoid adding a build step unless absolutely necessary.
+- Keep Markdown semantics in `index.ts`; hosted storage/lifecycle orchestration belongs in `hosted.ts`. Build before loading or packing so SDK consumers receive executable JavaScript.
 - Match existing formatting: tabs for indentation, semicolons, and double quotes.
 - Naming: `camelCase` for functions, `PascalCase` for types, `SCREAMING_SNAKE_CASE` for constants; tool names remain `snake_case` (e.g. `memory_write`).
 

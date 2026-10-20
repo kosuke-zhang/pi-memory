@@ -1,3 +1,11 @@
+# 0.5.0 — hosted student memory
+
+- Move mutable runtime state into instances; pin Pi peers to 1.3.0.
+- Add `pi-memory/hosted` with owner-bound storage, CAS and durable operation receipts.
+- Reuse Markdown tools with atomic forget/recovery, bounded keyword search and transient context.
+- Hosted mode has no automatic summaries, QMD processes or background writes.
+- Build JavaScript/declarations for SDK imports; remove module-global helper exports.
+
 # Changelog
 
 All notable changes to this project are documented here. The format is loosely
